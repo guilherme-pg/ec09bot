@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 #-*- coding: utf-8 -*-
 
 import sys
@@ -44,11 +44,25 @@ class EC09Bot(ircbot.SingleServerIRCBot):
         self.batima_cache = []
         self.batima_cache_age_max = 30*60 # seconds
         self.batima_cache_time = datetime.datetime.now()
+        # creating the default function table
+        self.handlers = {
+            # add hadlers' alias here
+            "bátima" : "command_batima",
+            "Bátima" : "command_batima"
+        }
 
     def start(self):
         self._connect()
         self.connection.join(self.CHANNEL)
         irclib.SimpleIRCClient.start(self)
+
+    def send_message(self, handler, nick):
+        if random.randint(1, 100) == 42:
+            uprise_msg = random.choice(self.BOT_UPRISE_MSGS)
+            self.connection.privmsg(self.CHANNEL, uprise_msg)
+
+        reply = "%s: %s" % (nick, handler())
+        self.connection.privmsg(self.CHANNEL, reply)
 
     def _on_pubmsg(self, connection, event):
         sendernick, _ = event.source().split('!', 1)
@@ -61,12 +75,12 @@ class EC09Bot(ircbot.SingleServerIRCBot):
         handler = getattr(self, "command_" + command, None)
 
         if callable(handler):
-            if random.randint(1, 100) == 42:
-                uprise_msg = random.choice(self.BOT_UPRISE_MSGS)
-                self.connection.privmsg(self.CHANNEL, uprise_msg)
-
-            reply = "%s: %s" % (sendernick, handler())
-            self.connection.privmsg(self.CHANNEL, reply)
+            self.send_message(handler, sendernick)
+        else:
+            # see if it is a handler alias
+            handler = getattr(self, self.handlers[command], None)
+            if callable(handler):
+                self.send_message(handler, sendernick)
 
     def command_bandeco(self):
         bandeco_url = \
