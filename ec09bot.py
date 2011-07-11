@@ -77,10 +77,12 @@ class EC09Bot(ircbot.SingleServerIRCBot):
         if callable(handler):
             self.send_message(handler, sendernick)
         else:
-            # see if it is a handler alias
-            handler = getattr(self, self.handlers[command], None)
-            if callable(handler):
-                self.send_message(handler, sendernick)
+            # verify if there is an alias defined for that
+            if self.handlers.has_key(command):
+                # see if it is a handler alias
+                handler = getattr(self, self.handlers[command], None)
+                if callable(handler):
+                    self.send_message(handler, sendernick)
 
     def command_bandeco(self):
         bandeco_url = \
